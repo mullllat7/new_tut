@@ -10,7 +10,7 @@ class Course(models.Model):
 
     name_of_course = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='course')
-    rating = models.IntegerField(default=0, validators=[MaxValueValidator(10), MinValueValidator(0)])
+    # rating = models.IntegerField(default=0, validators=[MaxValueValidator(10), MinValueValidator(0)])
 
     def __str__(self):
         return self.name_of_course
@@ -32,3 +32,11 @@ class Like(models.Model):
     def __str__(self):
         return self.like
 
+
+class Saved(models.Model):
+    user = models.ForeignKey(User, related_name='saved_cource', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='saved', on_delete=models.CASCADE)
+    saved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.saved}'

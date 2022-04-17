@@ -1,7 +1,7 @@
 from rest_framework import generics, viewsets
 from django.shortcuts import render
 
-from app.course.permissions import IsActivePermission
+from app.account.permissions import IsActivePermission
 from app.lesson.models import Lesson
 from app.lesson.serializers import LessonSerializers, LessonDetailSerializer
 

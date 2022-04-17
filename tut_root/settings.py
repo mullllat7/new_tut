@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'app.category',
     'app.course',
     'app.lesson',
+    'app.rating',
 
 
 
