@@ -26,7 +26,8 @@ urlpatterns = [
     path('category/', include('app.category.urls')),
     path('course/', include('app.course.urls')),
     path('lesson/', include('app.lesson.urls')),
-    path('rating/',include('app.rating.urls')),
+    path('rating/', include('app.rating.urls')),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

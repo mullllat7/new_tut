@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app.course.models import Course, CourseImage
+from app.course.models import Course, CourseImage, Saved
 
 
 class InlineCourseImage(admin.TabularInline):
@@ -14,3 +14,5 @@ class CourseAdminDisplay(admin.ModelAdmin):
 
 
 admin.site.register(Course, CourseAdminDisplay)
+admin.site.register(Saved)
+
