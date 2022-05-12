@@ -21,7 +21,7 @@ router.register('course', CourseViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    # path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('account/', include('app.account.urls')),
     path('category/', include('app.category.urls')),
     path('course/', include('app.course.urls')),

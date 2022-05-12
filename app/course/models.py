@@ -24,6 +24,7 @@ class CourseImage(models.Model):
     def __str__(self):
         return self.course.name_of_course
 
+
 class Like(models.Model):
     user = models.ForeignKey(User, related_name='like', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='like', on_delete=models.CASCADE)
