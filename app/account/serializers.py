@@ -1,86 +1,113 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
+
 from rest_framework import serializers
-from .tasks import send_activation_mail
-from tut_root.settings import EMAIL_HOST_USER
+from rest_framework.fields import ReadOnlyField
+
+from app.account.models import InfoUser
 
 User = get_user_model()
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(min_length=6, write_only=True)
-    password_confirmation = serializers.CharField(min_length=6, write_only=True)
-
-    class Meta:
-        model = User
-        fields = ('email', 'password', 'password_confirmation')
+class RegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    name = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, min_length=6)
+    password_confirmation = serializers.CharField(required=True, min_length=6)
 
     def validate_email(self, email):
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Пользователь с таким мейлом уже существует')
+            raise serializers.ValidationError('Адрес почты уже занят')
         return email
 
-    def validate(self, validated_data):
-        password = validated_data.get('password')
-        password_confirmation = validated_data.get('password_confirmation')
+    def validate(self, attrs):
+        password = attrs.get('password')
+        password_confirmation = attrs.pop('password_confirmation')
         if password != password_confirmation:
-            raise serializers.ValidationError("Пароли не совпадают")
-        return validated_data
+            raise serializers.ValidationError('Пароли не совподают')
+        return attrs
 
-    def create(self, validated_data):
-        email = validated_data.get('email')
-        password = validated_data.get('password')
-        user = User.objects.create_user(email=email, password=password)
-        send_activation_mail(user.email, user.activation_code)
+    def create(self):
+        attrs = self.validated_data
+        user = User.objects.create_user(**attrs)
+        code = user.generate_activation_code()
+        user.send_activation_mail(user.email, code)
         return user
 
 
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(style= {'input_type':'password'}, trim_whitespace=False)
+class ActivationSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(min_length=8, max_length=8)
+
+    def validate_email(self, email):
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('Пользователь не зарегистрирован')
+        return email
+
+    def validate_code(self, code):
+        if not User.objects.filter(activation_code=code).exists():
+            raise serializers.ValidationError('Пользователь не зарегистрирован')
+        return code
+
 
     def validate(self, attrs):
         email = attrs.get('email')
+        code = attrs.get('code')
+        if not User.objects.filter(email=email, activation_code=code).exists():
+            raise serializers.ValidationError('Пользователь не найден')
+        return attrs
+
+    def activate(self):
+        email = self.validated_data.get('email')
+        user = User.objects.get(email=email)
+        user.is_active = True
+        user.activation_code = ''
+        user.save()
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True)
+
+    def validate_email(self, email):
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('Пользователь не зарегистрирован')
+        return email
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        email = attrs.get('email')
         password = attrs.get('password')
-
         if email and password:
-            user = authenticate(request=self.context.get('request'), username=email, password=password)
-
+            user = authenticate(username=email, password=password, request=request)
             if not user:
-                msg = 'Невозможно войти в систему с предоставленными учетными данными'
-                raise serializers.ValidationError(msg, code='authorization')
-
+                raise serializers.ValidationError('Неверный email или пароль')
         else:
-            msg = 'Должен включать "username" и "password"'
-            raise serializers.ValidationError(msg, code='authorization')
-
+            raise serializers.ValidationError('Email и пароль обязательны')
         attrs['user'] = user
         return attrs
 
-
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(min_length=6, required=True)
-    new_password = serializers.CharField(min_length=6, required=True)
-    new_password_confirmation = serializers.CharField(min_length=6, required=True)
+    old_pass = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, min_length=6)
+    password_confirm = serializers.CharField(required=True, min_length=6)
 
-    def validate_old_password(self, old_password):
-        request = self.context.get('request')
-        user = request.user
-        if not user.check_password(old_password):
-            raise serializers.ValidationError('Введен неправильный пароль')
-        return old_password
+    def validate_old_pass(self, old_pass):
+        user = self.context.get('request').user
+        if not user.check_password(old_pass):
+            raise serializers.ValidationError('Неверный пароль')
+        return old_pass
 
     def validate(self, attrs):
-        new_pass1 = attrs.get('new_password')
-        new_pass2 = attrs.get('new_password_confirmation')
-        if new_pass1 != new_pass2:
-            raise serializers.ValidationError('Пароли не совпадают')
+        pass1 = attrs.get('password')
+        pass2 = attrs.get('password_confirm')
+        if pass1 != pass2:
+            raise serializers.ValidationError('Пароли не совподают')
         return attrs
 
-    def set_new_password(self):
-        new_pass = self.validated_data.get('new_password')
+    def set_new_pass(self):
         user = self.context.get('request').user
-        user.set_password(new_pass)
+        password = self.validated_data.get('password')
+        user.set_password(password)
         user.save()
 
 
@@ -89,40 +116,66 @@ class ForgotPasswordSerializer(serializers.Serializer):
 
     def validate_email(self, email):
         if not User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Такого пользователя не существует')
+            raise serializers.ValidationError('Пользователь не зарегистрирован')
         return email
 
-    def send_verification_email(self):
+    def send_code(self):
         email = self.validated_data.get('email')
         user = User.objects.get(email=email)
-        user.create_activation_code()
-        user.save()
+        user.generate_activation_code()
         send_mail(
-            'Password recovery',
-            f"""Ваш код активации: http://localhost:8000/account/forgot_password_complete/{user.activation_code}/""",
-            EMAIL_HOST_USER,
-            [user.email, ]
+            'Восстановление пароля',
+            f'Ваш код потверждения: {user.generate_activation_code()}',
+            'abai@gmail.com',
+            [email]
         )
 
-class ForgotPasswordCompleteSerializer(serializers.Serializer):
+class ForgetPasswordCompleteSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
-    password = serializers.CharField(min_length=6, required=True)
-    password_confirmation = serializers.CharField(min_length=6, required=True)
+    # code = serializers.CharField(min_length=8, max_length=8, required=True)
+    password = serializers.CharField(required=True)
+    password_confirm = serializers.CharField(required=True)
+
+    def validate_email(self, email):
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('Пользователь не зарегистрирован')
+        return email
+
+    def validate_code(self, code):
+        if not User.objects.filter(activation_code=code).exists():
+            raise serializers.ValidationError('Пользователь не зарегистрирован')
+        return code
 
     def validate(self, attrs):
-        email = attrs.get('email')
-        password1 = attrs.get('password')
-        password2 = attrs.get('password_confirmation')
-
-        if not User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Такого пользователя не существует')
-        if password1 != password2:
-            raise serializers.ValidationError('Пароли не совпадают')
+        pass1 = attrs.get('password')
+        pass2 = attrs.get('password_confirm')
+        if pass1 != pass2:
+            raise serializers.ValidationError('Пароли не совподают')
         return attrs
 
-    def set_new_password(self):
+    def set_new_pass(self):
         email = self.validated_data.get('email')
         password = self.validated_data.get('password')
         user = User.objects.get(email=email)
         user.set_password(password)
+        user.activation_code = ''
         user.save()
+
+
+
+class InfoUserSerializer(serializers.ModelSerializer):
+    author = ReadOnlyField(source='author.email')
+
+    class Meta:
+        model = InfoUser
+        fields = ['id', 'author', 'name', 'surname', 'image']
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        info, _ = InfoUser.objects.update_or_create(
+            author=request.user,
+            defaults={'name': validated_data.get('name'),
+                      'surname': validated_data.get('surname'),
+                      'image': validated_data.get('image')}
+        )
+        return info

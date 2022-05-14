@@ -1,42 +1,39 @@
-from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail
 from django.db import models
-from tut_root.settings import EMAIL_HOST_USER
-
 
 class UserManager(BaseUserManager):
-    use_in_migrations = True
-
-    def create_user(self, email, password=None, *args, **kwargs):
+    def _create(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError('Email не может быть пустым')
         email = self.normalize_email(email)
-        user = self.model(email=email)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.create_activation_code()
-        user.save(using=self._db)
+        user.save()
         return user
 
-    def create_superuser(self, email, password, *args, **kwargs):
-        email = self.normalize_email(email)
-        user = self.model(email=email)
-        user.set_password(password)
-        user.is_staff = True
-        user.is_superuser = True
-        user.is_active = True
-        user.save(using=self._db)
-        return user
+    def create_user(self, email, password, **extra_fields):
+        extra_fields.setdefault('is_active', False)
+        extra_fields.setdefault('is_staff', False)
+        return self._create(email, password, **extra_fields)
+
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', True)
+        return self._create(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser):
-    username = models.CharField(max_length=100, blank=True)
-    email = models.EmailField(unique=True, primary_key=True)
+    email = models.EmailField(primary_key=True)
+    name = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    activation_code = models.CharField(max_length=100, blank=True)
+    activation_code = models.CharField(max_length=8, blank=True)
+
+    objects = UserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-
-    objects = UserManager()
 
     def __str__(self):
         return self.email
@@ -44,24 +41,33 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return self.is_staff
 
-    def has_perm(self, perm, obj=None):
+    def has_perm(self, obj=None):
         return self.is_staff
 
-    def create_activation_code(self):
+    def generate_activation_code(self):
         from django.utils.crypto import get_random_string
-        code = get_random_string(6, '0123456789')
+
+        code = get_random_string(8)
         self.activation_code = code
         self.save()
+        return code
+    @staticmethod
+    def send_activation_mail(email, code):
+        message = f'Ваш код активации: {code}'
+        send_mail('Активация аккаунта',
+                  message, 'test@gmail.com',
+                  [email])
 
-    def activate_with_code(self, activation_code):
-        if self.activation_code != activation_code:
-            raise Exception('Неверный код, проверь и попробуй снова')
-        self.is_active = True
-        self.save()
 
-    def send_activation_email(self):
-        msg = f'''Спасибо за регистрацию,: 
-        Вот ваш код активации:
-                http://127.0.0.1:8000/auth/account/activate/{self.activation_code}/'''
+class InfoUser(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='info_user')
+    name = models.CharField(max_length=50)
+    surname = models.CharField(max_length=50)
+    image = models.ImageField(upload_to='media/user_image', blank=True, null=True)
 
-        send_mail('Akkaunt aktivirovan', msg, EMAIL_HOST_USER, [self.email])
+    def __str__(self):
+        return f'{self.name}-{self.surname}'
+
+    class Meta:
+        verbose_name = 'Info user'
+        verbose_name_plural = 'Info users'

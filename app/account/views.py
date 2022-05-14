@@ -1,73 +1,76 @@
-from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer, LoginSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, ForgotPasswordCompleteSerializer
 
-User = get_user_model()
+from .models import InfoUser
+from .serializers import (RegisterSerializer, ActivationSerializer, LoginSerializer, ChangePasswordSerializer,
+                          ForgetPasswordCompleteSerializer, ForgotPasswordSerializer, InfoUserSerializer)
+from ..course.views import PermissionMixin
 
 
-class RegistrationView(APIView):
-
+class RegisterView(APIView):
     def post(self, request):
         data = request.data
-        serializers = RegisterSerializer(data=data)
-        if serializers.is_valid(raise_exception=True):
-            serializers.save()
-            return Response('Вы успешно зарегистрировались!', status=status.HTTP_201_CREATED)
-
+        serializer = RegisterSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.create()
+            message = f'Вы успешно зарегистрированы. ' \
+                      f'Вам отправлено письмо с активацией'
+            return Response(message, status=201)
 
 class ActivationView(APIView):
+    def post(self, request):
+        data = request.data
+        serializer = ActivationSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.activate()
+            return Response('Ваш аккаунт успешно активирован')
 
-    def get(self, request, activation_code):
-        user = get_user_model()
-        user = get_object_or_404(User, activation_code=activation_code)
-        user.is_active = True
-        user.activation_code = ''
-        user.save()
-        return Response('Ваш аккаунт был успешно активирован', status=status.HTTP_200_OK)
 
 
 class LoginView(ObtainAuthToken):
     serializer_class = LoginSerializer
 
-
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
         Token.objects.filter(user=user).delete()
-        return Response('Вы успешно вышли из аккаунта', status=status.HTTP_200_OK)
+        return Response('Вы успешно разлогинились')
+
 
 class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
-
-        if serializer.is_valid(raise_exception=True):
-            serializer.set_new_password()
-            return Response("Пароль успешно изменен")
+        data = request.data
+        serializer = ChangePasswordSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.set_new_pass()
+        return Response('Пароль успешно обновлён')
 
 
 class ForgotPasswordView(APIView):
     def post(self, request):
-        serializer = ForgotPasswordSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.send_verification_email()
-            return Response("На вашу почту было выслано письмо")
-
+        data = request.data
+        serializer = ForgotPasswordSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.send_code()
+        return Response('Вам отправлено письмо для восстовления пароля')
 
 class ForgotPasswordCompleteView(APIView):
-    def post(self, request, verification_code):
-        user = User.objects.get(activation_code=verification_code)
-        user.activate_with_code(activation_code=verification_code)
-        serializer = ForgotPasswordCompleteSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.set_new_password()
-            return Response('Ваш пароль изменен!')
+    def post(self, request):
+        data = request.data
+        serializer = ForgetPasswordCompleteSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.set_new_pass()
+        return Response('Пароль успешно обновлён')
+
+
+class InfoUserViewSet(PermissionMixin, viewsets.ModelViewSet):
+    queryset = InfoUser.objects.all()
+    serializer_class = InfoUserSerializer
