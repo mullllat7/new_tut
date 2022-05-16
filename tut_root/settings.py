@@ -74,7 +74,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'new_tut_db2',
-        'USER': 'postgres',
+        'USER': 'kinder7',
         'PASSWORD': '1',
         'HOST': 'localhost',
         'PORT': 5432,
