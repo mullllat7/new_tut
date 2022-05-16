@@ -3,6 +3,8 @@ from rest_framework.fields import ReadOnlyField
 from rest_framework.serializers import ModelSerializer
 
 from app.course.models import Course, CourseImage, Like, Saved
+from app.lesson.models import Lesson
+from app.lesson.serializers import LessonSerializers
 from app.rating.serializers import RatingSerializer
 
 
@@ -14,6 +16,8 @@ class CourseSerializers(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['lessons'] = LessonSerializers(Lesson.objects.filter(course=instance.id, ), many=True,
+                                                      context=self.context).data
         return representation
 
 
@@ -29,10 +33,10 @@ class CourseDetailSerializer(serializers.ModelSerializer):
                                                  context=self.context).data
         representation['like'] = instance.like.filter(like=True).count()
         total_rating = [i.ratings for i in instance.ratings.all()]
-
+        representation['lessons'] = LessonSerializers(Lesson.objects.filter(course=instance.id, ), many=True,
+                                                      context=self.context).data
         if len(total_rating) > 0:
             representation['total_rating'] = sum(total_rating) / len(total_rating)
-        # representation['total_rating'] = RatingSerializer(instance.rating.filter(course=instance.id), many=True).data
         return representation
 
 

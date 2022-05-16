@@ -13,7 +13,6 @@ class Lesson(models.Model):
     name = models.CharField(max_length=255)
     course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='lesson')
     description = models.CharField(max_length=255)
-    # date_uploaded = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.name

@@ -15,4 +15,5 @@ class CourseAdminDisplay(admin.ModelAdmin):
 
 admin.site.register(Course, CourseAdminDisplay)
 admin.site.register(Saved)
+admin.site.register(CourseImage)
 
