@@ -6,8 +6,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'c#*7a^e*6inhqin&yb-5cvgbi*ffpyl0h=gf)b&1(plkpw)f_2'
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["http://127.0.0.1:3000",
+                 "127.0.0.1",]
+CORS_ORIGIN_ALLOW_ALL = True
 
+CORS_ORIGIN_WHITELIST = [
+    'http://127.0.0.1:3000'
+]
 
 # Application definition
 
@@ -25,6 +30,7 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_yasg',
     'djoser',
+    "corsheaders",
 
     'app.account',
     'app.category',
@@ -44,6 +50,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'tut_root.urls'
