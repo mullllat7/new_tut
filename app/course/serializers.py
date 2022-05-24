@@ -16,6 +16,8 @@ class CourseSerializers(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['images'] = CourseImageSerializer(CourseImage.objects.filter(course=instance.id, ), many=True,
+                                                         context=self.context).data
         representation['lessons'] = LessonSerializers(Lesson.objects.filter(course=instance.id, ), many=True,
                                                       context=self.context).data
         return representation

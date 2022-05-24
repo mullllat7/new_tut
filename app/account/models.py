@@ -55,7 +55,7 @@ class User(AbstractBaseUser):
     def send_activation_mail(email, code):
         message = f'Ваш код активации: {code}'
         send_mail('Активация аккаунта',
-                  message, 'test@gmail.com',
+                  message, 'daniel7mbappe@gmail.com',
                   [email])
 
 
