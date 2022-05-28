@@ -11,6 +11,8 @@ class LessonSerializers(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['videos'] = LessonVideoSerializer(Video.objects.filter(lesson=instance.id, ), many=True,
+                                                         context=self.context).data
         return representation
 
 

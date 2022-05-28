@@ -77,7 +77,6 @@ class LikeSerializer(serializers.ModelSerializer):
 
 
 class SavedSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Saved
         fields = '__all__'

@@ -17,7 +17,7 @@ schema_view = get_schema_view(
     public=True
 )
 router = DefaultRouter()
-router.register('course', CourseViewSet)
+router.register('coursev', CourseViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

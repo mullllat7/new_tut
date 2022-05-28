@@ -35,7 +35,7 @@ class Like(models.Model):
 
 
 class Saved(models.Model):
-    user = models.ForeignKey(User, related_name='saved_cource', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='saved_p', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='saved', on_delete=models.CASCADE)
     saved = models.BooleanField(default=False)
 
