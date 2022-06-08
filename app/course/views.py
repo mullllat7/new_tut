@@ -1,19 +1,13 @@
 import django_filters
-from django.db.models import Q
-from django.shortcuts import render
 from rest_framework import generics, viewsets, filters, status
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.filters import SearchFilter
 from app.account.permissions import IsActivePermission
 from app.course.models import Course, Like, Saved
-from app.course.permissions import IsAuthorPermission
-from django_filters.rest_framework import DjangoFilterBackend
+from app.course.permissions import IsAuthor
 from app.course.serializers import CourseSerializers, CourseDetailSerializer, SavedSerializer
-from rest_framework.views import APIView
+
 
 class PermissionMixin:
     def get_permissions(self):
@@ -52,7 +46,7 @@ class CourseLikeViewSet(viewsets.ModelViewSet):
         elif self.action == 'like':
             permissions = [IsAuthenticated, ]
         else:
-            permissions = [IsAuthorPermission, ]
+            permissions = [IsAuthor, ]
         return [permissions() for permissions in permissions]
 
     @action(detail=True, methods=['POST'])
@@ -102,4 +96,5 @@ class CourseViewSet(viewsets.ModelViewSet):
 class SavedView(generics.ListAPIView):
     queryset = Saved.objects.all()
     serializer_class = SavedSerializer
+    permission_classes = [IsAuthenticated, ]
 

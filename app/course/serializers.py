@@ -80,3 +80,9 @@ class SavedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Saved
         fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['course'] = CourseSerializers(Course.objects.filter(id=instance.id, ), many=True,
+                                                      context=self.context).data
+        return representation
