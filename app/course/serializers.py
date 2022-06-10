@@ -34,7 +34,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['images'] = CourseImageSerializer(CourseImage.objects.filter(course=instance.id, ), many=True,
                                                  context=self.context).data
-        representation['like'] = instance.like.filter(like=True).count()
+        representation['likes'] = instance.likes.count()
         total_rating = [i.ratings for i in instance.ratings.all()]
         representation['lessons'] = LessonSerializers(Lesson.objects.filter(course=instance.id, ), many=True,
                                                       context=self.context).data
