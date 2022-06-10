@@ -24,14 +24,14 @@ class CourseImage(models.Model):
         return self.course.name_of_course
 
 
-class Like(models.Model):
-    user = models.ForeignKey(User, related_name='like', on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, related_name='like', on_delete=models.CASCADE)
-    like = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.like
-
+# class Like(models.Model):
+#     user = models.ForeignKey(User, related_name='like', on_delete=models.CASCADE)
+#     course = models.ForeignKey(Course, related_name='like', on_delete=models.CASCADE)
+#     like = models.BooleanField(default=False)
+#
+#     def __str__(self):
+#         return f'{self.like}'
+#
 
 class Saved(models.Model):
     user = models.ForeignKey(User, related_name='saved_p', on_delete=models.CASCADE)
@@ -40,3 +40,11 @@ class Saved(models.Model):
 
     def __str__(self):
         return f'{self.saved}'
+
+
+class Like(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes', default='')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='likes')
+
+    def __str__(self):
+        return f'{self.author} -> {self.course}'
