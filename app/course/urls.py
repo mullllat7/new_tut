@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from app.course.models import Course
 
-from app.course.views import CourseDetailView, CourseLikeViewSet, SavedView, CourseViewSet, LikeViewSet
+from app.course.views import CourseDetailView, CourseLikeViewSet, SavedView, CourseViewSet, LikeViewSet, CourseHistoryView
 
 #
 router = DefaultRouter()
@@ -11,6 +12,7 @@ router.register('', CourseViewSet)
 
 
 urlpatterns = [
+    path('history/', CourseHistoryView.as_view()),
     path('savedlist/', SavedView.as_view()),
     path('<int:pk>/', CourseDetailView.as_view()),
     # path('likelist/', LikeView.as_view()),

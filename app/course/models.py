@@ -23,6 +23,11 @@ class CourseImage(models.Model):
     def __str__(self):
         return self.course.name_of_course
 
+class UserCourseViewed(models.Model):
+
+    course = models.ForeignKey(Course, related_name="viewed", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="viewed", on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(blank=True, null=True)
 
 # class Like(models.Model):
 #     user = models.ForeignKey(User, related_name='like', on_delete=models.CASCADE)

@@ -1,3 +1,5 @@
+from django.utils.timezone import now
+
 import django_filters
 from rest_framework import generics, viewsets, filters, status
 from rest_framework.decorators import action
@@ -6,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from app.account.permissions import IsActivePermission
-from app.course.models import Course, Like, Saved
+from app.course.models import Course, Like, Saved, UserCourseViewed
 from app.course.permissions import IsAuthor
 from app.course.serializers import CourseSerializers, CourseDetailSerializer, SavedSerializer, LikeSerializer
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin
@@ -35,6 +37,19 @@ class CourseDetailView(generics.RetrieveAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseDetailSerializer
     permission_classes = [IsActivePermission]
+    
+    def get_object(self):
+        print("---------------")
+        obj = super().get_object()
+        user = self.request.user
+        if user.is_authenticated:
+            course_view, _ = UserCourseViewed.objects.get_or_create(
+                user=user,
+                course=obj
+            )
+            course_view.timestamp = now()
+            course_view.save()
+        return obj
 
 
 class CourseLikeViewSet(viewsets.ModelViewSet):
@@ -111,3 +126,16 @@ class SavedView(generics.ListAPIView):
 class LikeViewSet(CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin, GenericViewSet):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
+
+
+class CourseHistoryView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializers
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Course.objects.filter(
+            viewed__user=user
+        ).order_by('-viewed__timestamp')
+
+        return queryset
