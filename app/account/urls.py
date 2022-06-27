@@ -2,9 +2,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import RegisterView, ActivationView, LoginView, LogoutView, ChangePasswordView, ForgotPasswordView, \
-    ForgotPasswordCompleteView, InfoUserViewSet
-
+from .views import *
 router = DefaultRouter()
 
 

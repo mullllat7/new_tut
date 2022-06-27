@@ -65,16 +65,6 @@ class CourseImageSerializer(serializers.ModelSerializer):
         return representation
 
 
-# class LikeSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = Like
-#         fields = '__all__'
-#
-#     def to_representation(self, instance):
-#         representation = super().to_representation(instance)
-#         representation['like'] = instance.like(like=True).count()
-#         return representation
 class LikeSerializer(ModelSerializer):
     author = ReadOnlyField(source='author.email')
 
@@ -98,6 +88,7 @@ class LikeSerializer(ModelSerializer):
 
 
 class SavedSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.email')
     class Meta:
         model = Saved
         fields = '__all__'

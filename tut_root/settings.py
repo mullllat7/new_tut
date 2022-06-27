@@ -79,8 +79,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'new_tut_db2',
-        'USER': 'kinder7',
-        'PASSWORD': '1',
+        'USER': 'postgres',
+        'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': 5432,
     }
@@ -142,12 +142,10 @@ REST_FRAMEWORK = {
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'danieltestnazirov@gmail.com'
-EMAIL_HOST_PASSWORD = 'daniel1922'
-
-AUTH_USER_MODEL = "account.User"
-
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp-mail.outlook.com'
+EMAIL_HOST_USER = "adilkhanakakov@outlook.com"
+EMAIL_HOST_PASSWORD = "aza7450770"

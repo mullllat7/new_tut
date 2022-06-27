@@ -50,6 +50,16 @@ class Saved(models.Model):
 class Like(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes', default='')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='likes')
+    
+    like = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.author} -> {self.course}'
+        return f'{self.author} - {self.like}'
+
+    class Meta:
+        verbose_name = 'Лайк'
+        verbose_name_plural = 'Лайки'
+
+
+        verbose_name = 'Like'
+        verbose_name_plural = 'Likes'

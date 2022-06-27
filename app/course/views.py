@@ -32,11 +32,11 @@ class CourseFilter(django_filters.FilterSet):
         fields = ['name_of_course']
 
 
-class CourseDetailView(generics.RetrieveAPIView):
 
+class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
-    serializer_class = CourseDetailSerializer
-    permission_classes = [IsActivePermission]
+    serializer_class = CourseSerializers
+    permission_classes = [IsAuthenticated, ]
     
     def get_object(self):
         print("---------------")
@@ -51,56 +51,22 @@ class CourseDetailView(generics.RetrieveAPIView):
             course_view.save()
         return obj
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = CourseDetailSerializer(instance)
+        return Response(serializer.data)
 
-class CourseLikeViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializers
-    permission_classes = [IsAuthenticated, ]
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permissions = []
-        elif self.action == 'like':
-            permissions = [IsAuthenticated, ]
-        else:
-            permissions = [IsAuthor, ]
-        return [permissions() for permissions in permissions]
-
-    # @action(detail=True, methods=['POST'])
-    # def like(self, requests, *args, **kwargs):
-    #     post = self.get_object()
-    #     like_obj, _ = Like.objects.get_or_create(course=post, user=requests.user)
-    #     like_obj.like = not like_obj.like
-    #     like_obj.save()
-    #     status = 'Поставил лайк'
-    #     if not like_obj.like:
-    #         status = 'Убрал лайк'
-    #     return Response({'status': status})
-
-    @action(detail=False, methods=['get'])
-    def liked(self, request, pk=None):
-        likes = Like.objects.filter(author=request.user)
-        course_list = [like.course for like in likes]
-        serializer = CourseSerializers(course_list, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-
-    def get_serializer_context(self):
-        return {'request': self.request}
-
-
-class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializers
-    permission_classes = [IsAuthenticated, ]
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permissions = []
-        elif self.action == 'saved':
-            permissions = [IsAuthenticated, ]
-        else:
-            permissions = [IsAuthenticated]
-        return [permissions() for permissions in permissions]
+    @action(methods=['POST'], detail=True)
+    def like(self, request, pk):
+        course = self.get_object()
+        like_obj, _ = Like.objects.get_or_create(course=course, author=request.user)
+        print(like_obj)
+        like_obj.like = not like_obj.like
+        like_obj.save()
+        status = 'liked'
+        if not like_obj.like:
+            status = 'unliked'
+        return Response({'status': status})
 
     @action(detail=True, methods=['POST'])
     def saved(self, requests, *args, **kwargs):
@@ -117,16 +83,21 @@ class CourseViewSet(viewsets.ModelViewSet):
         return {'request': self.request}
 
 
+
 class SavedView(generics.ListAPIView):
     queryset = Saved.objects.all()
     serializer_class = SavedSerializer
     permission_classes = [IsAuthenticated, ]
 
+    def get_queryset(self):
 
-class LikeViewSet(CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin, GenericViewSet):
-    queryset = Like.objects.all()
-    serializer_class = LikeSerializer
+        user = self.request.user
+        queryset = super().get_queryset()
+        queryset = queryset.filter(user=user, saved=True)
+        return queryset
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 class CourseHistoryView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
