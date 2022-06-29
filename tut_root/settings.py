@@ -1,10 +1,13 @@
 import os
 from pathlib import Path
 
+from decouple import config
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'c#*7a^e*6inhqin&yb-5cvgbi*ffpyl0h=gf)b&1(plkpw)f_2'
-DEBUG = True
+SECRET_KEY = config('SECRET_KEY')
+
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
@@ -77,12 +80,12 @@ WSGI_APPLICATION = 'tut_root.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'new_tut_db2',
-        'USER': 'postgres',
-        'PASSWORD': '123456',
-        'HOST': 'localhost',
-        'PORT': 5432,
+        'ENGINE': config('ENGINE'),
+        'NAME': config('NAME'),
+        'USER': config('USER'),
+        'PASSWORD': config('PASSWORD'),
+        'HOST': config('HOST'),
+        'PORT': config('PORT'),
     }
 }
 
@@ -142,10 +145,3 @@ REST_FRAMEWORK = {
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp-mail.outlook.com'
-EMAIL_HOST_USER = "adilkhanakakov@outlook.com"
-EMAIL_HOST_PASSWORD = "aza7450770"

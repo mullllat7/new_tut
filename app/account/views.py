@@ -6,8 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import InfoUser
-from .serializers import (RegisterSerializer, ActivationSerializer, LoginSerializer, ChangePasswordSerializer,
-                          ForgetPasswordCompleteSerializer, ForgotPasswordSerializer, InfoUserSerializer)
+from .serializers import *
 from ..course.views import PermissionMixin
 
 
@@ -20,17 +19,17 @@ class RegisterView(APIView):
             message = f'Вы успешно зарегистрированы. ' \
                       f'Вам отправлено письмо с активацией'
             return Response(message, status=201)
-
-class ActivationView(APIView):
-    def post(self, request):
-        data = request.data
-        serializer = ActivationSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.activate()
-            return Response('Ваш аккаунт успешно активирован')
-
-
-
+#
+# class ActivationView(APIView):
+#     def post(self, request):
+#         data = request.data
+#         serializer = ActivationSerializer(data=data)
+#         if serializer.is_valid(raise_exception=True):
+#             serializer.activate()
+#             return Response('Ваш аккаунт успешно активирован')
+#
+#
+#
 class LoginView(ObtainAuthToken):
     serializer_class = LoginSerializer
 
@@ -43,34 +42,34 @@ class LogoutView(APIView):
         return Response('Вы успешно разлогинились')
 
 
-class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        data = request.data
-        serializer = ChangePasswordSerializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.set_new_pass()
-        return Response('Пароль успешно обновлён')
-
-
-class ForgotPasswordView(APIView):
-    def post(self, request):
-        data = request.data
-        serializer = ForgotPasswordSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.send_code()
-        return Response('Вам отправлено письмо для восстовления пароля')
-
-class ForgotPasswordCompleteView(APIView):
-    def post(self, request):
-        data = request.data
-        serializer = ForgetPasswordCompleteSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.set_new_pass()
-        return Response('Пароль успешно обновлён')
-
-
+# class ChangePasswordView(APIView):
+#     permission_classes = [IsAuthenticated]
+#
+#     def post(self, request):
+#         data = request.data
+#         serializer = ChangePasswordSerializer(data=data, context={'request': request})
+#         serializer.is_valid(raise_exception=True)
+#         serializer.set_new_pass()
+#         return Response('Пароль успешно обновлён')
+#
+#
+# class ForgotPasswordView(APIView):
+#     def post(self, request):
+#         data = request.data
+#         serializer = ForgotPasswordSerializer(data=data)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.send_code()
+#         return Response('Вам отправлено письмо для восстовления пароля')
+#
+# class ForgotPasswordCompleteView(APIView):
+#     def post(self, request):
+#         data = request.data
+#         serializer = ForgetPasswordCompleteSerializer(data=data)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.set_new_pass()
+#         return Response('Пароль успешно обновлён')
+#
+#
 class InfoUserViewSet(PermissionMixin, viewsets.ModelViewSet):
     queryset = InfoUser.objects.all()
     serializer_class = InfoUserSerializer
