@@ -5,9 +5,8 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY')
-
-DEBUG = config('DEBUG', default=True, cast=bool)
+SECRET_KEY = 'c#*7a^e*6inhqin&yb-5cvgbi*ffpyl0h=gf)b&1(plkpw)f_2'
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
@@ -80,12 +79,12 @@ WSGI_APPLICATION = 'tut_root.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('ENGINE'),
-        'NAME': config('NAME'),
-        'USER': config('USER'),
-        'PASSWORD': config('PASSWORD'),
-        'HOST': config('HOST'),
-        'PORT': config('PORT'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'new_tut_db2',
+        'USER': 'hello',
+        'PASSWORD': '1',
+        'HOST': 'localhost',
+        'PORT': 5432
     }
 }
 
