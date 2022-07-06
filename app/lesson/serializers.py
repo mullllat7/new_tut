@@ -49,3 +49,9 @@ class LessonVideoSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['video'] = self._get_video_url(instance)
         return representation
+
+
+
+
+
+

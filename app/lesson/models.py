@@ -12,7 +12,7 @@ from app.course.models import Course
 class Lesson(models.Model):
     name = models.CharField(max_length=255)
     course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='lesson')
-    description = models.CharField(max_length=255)
+    file = models.FileField(upload_to='files/', null=True, verbose_name="",)
 
     def __str__(self):
         return self.name
@@ -20,8 +20,8 @@ class Lesson(models.Model):
 
 class Video(models.Model):
 
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='lesson_video')
-    video = models.FileField(upload_to='videos/', null=True, verbose_name="")
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='lesson_video', )
+    video = models.FileField(upload_to='videos/', null=True, verbose_name="",)
 
     def __str__(self):
         return self.lesson.name
